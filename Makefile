@@ -1,4 +1,5 @@
-CFLAGS = -Wall -std=c99 -pedantic -g
+CFLAGS = -Wall -std=c99 -pedantic -g -O1
+
 DEPS = sudoku.h solver.h
 
 all: sudoku

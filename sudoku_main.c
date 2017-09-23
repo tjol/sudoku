@@ -147,10 +147,10 @@ void process_sudoku_file(FILE *fp)
         if (count_solutions || all_solutions) {
             int solution_count = 0;
             struct solutions_list *solutions;
+            solutions = new_solutions_list();
 
             if (timeit_iters == 0) {
                 if (all_solutions) {
-                    solutions = new_solutions_list();
                     solution_count = collect_all_solutions(s,
                         (solution_collector)save_solution, solutions);
                 } else {

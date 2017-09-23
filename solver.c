@@ -158,8 +158,21 @@ int check_solution(sudoku_t field)
     else return SUDOKU_DONE;
 }
 
-int _solve_more(sudoku_t s, bool check_unique,
+static int _solve_more(sudoku_t s, bool check_unique,
+                      solution_collector collect, void *collect_arg);
+
+int _solve(sudoku_t s, bool check_unique,
            solution_collector collect, void *collect_arg)
+{
+    _dbg("Solving:\n");
+    _dbg_print_sudoku(s);
+    iterate_sudoku(s);
+
+    return _solve_more(s, check_unique, collect, collect_arg);
+}
+
+static int _solve_more(sudoku_t s, bool check_unique,
+                       solution_collector collect, void *collect_arg)
 {
     sudoku_t buffer, a_solution;
 
@@ -247,12 +260,3 @@ int _solve_more(sudoku_t s, bool check_unique,
     }
 }
 
-int _solve(sudoku_t s, bool check_unique,
-           solution_collector collect, void *collect_arg)
-{
-    _dbg("Solving:\n");
-    _dbg_print_sudoku(s);
-    iterate_sudoku(s);
-
-    return _solve_more(s, check_unique, collect, collect_arg);
-}
