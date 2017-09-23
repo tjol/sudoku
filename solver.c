@@ -7,49 +7,40 @@ static inline void remove_option(field_t number, field_t *place)
     *place &= ~number;
 }
 
+static inline void impose(sudoku_t field, int i, int j)
+{
+    int k, l;
+
+    // impose the constraint of location [i,j] on its peers
+    field_t f = field[i][j];
+    if (!is_fixed(f)) return;
+
+    for (k=0; k<9; ++k) {
+        // Check my row!
+        if (k != j) remove_option(f, &field[i][k]);
+        // Check my column!
+        if (k != i) remove_option(f, &field[k][j]);
+    }
+
+    // check my corner!
+    int origin1 = (i/3)*3;
+    int origin2 = (j/3)*3;
+    for (k=origin1; k<origin1+3; ++k) {
+        for (l=origin2; l<origin2+3; ++l) {
+            if (k != i || l != j) {
+                remove_option(f, &field[k][l]);
+            }
+        }
+    }
+}
+
 static bool iterate_sudoku(sudoku_t field)
 {
-    int i, j, k, l;
-    int corner1, corner2;
+    int i, j;
 
-    // process rows
     for (i=0; i<9; ++i) {
         for (j=0; j<9; ++j) {
-            if (is_fixed(field[i][j])) {
-                for (k=0; k<9; ++k) {
-                    if (k != j) remove_option(field[i][j], &field[i][k]);
-                }
-            }
-        }
-    }
-
-    // process columns
-    for (i=0; i<9; ++i) {
-        for (j=0; j<9; ++j) {
-            if (is_fixed(field[j][i])) {
-                for (k=0; k<9; ++k) {
-                    if (k != j) remove_option(field[j][i], &field[k][i]);
-                }
-            }
-        }
-    }
-
-    // Process sectors
-    for (corner1=0; corner1<9; corner1+=3) {
-        for (corner2=0; corner2<9; corner2+=3) {
-            for (i=0; i<3; ++i) {
-                for (j=0; j<3; ++j) {
-                    if (is_fixed(field[corner1+i][corner2+j])) {
-                        for (k=0; k<3; ++k) {
-                            for (l=0; l<3; ++l) {
-                                if (k != i || l != j)
-                                    remove_option(field[corner1+i][corner2+j],
-                                                 &field[corner1+k][corner2+l]);
-                            }
-                        }
-                    }
-                }
-            }
+            impose(field, i, j);
         }
     }
 
