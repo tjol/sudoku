@@ -68,7 +68,7 @@ static inline void impose(sudoku_t field, int i, int j, bool recurse)
     }
 }
 
-static bool iterate_sudoku(sudoku_t field)
+static void iterate_sudoku(sudoku_t field)
 {
     int i, j;
 
@@ -77,8 +77,65 @@ static bool iterate_sudoku(sudoku_t field)
             impose(field, i, j, false);
         }
     }
+}
 
-    return all_are_fixed(field);
+static void iterate_elimination(sudoku_t field)
+{
+    int i, j, k, l;
+
+    bool imposed_any;
+
+    do {
+        imposed_any = false;
+        for (i=0; i<9; ++i) {
+            for (j=0; j<9; ++j) {
+                if (is_fixed(field[i][j])) continue;
+
+                // Go through the row, column, and corner.
+                // See if there is any number that can only be here.
+                field_t row_mask = 0, col_mask = 0, corner_mask = 0;
+                for (k=0; k<9; ++k) {
+                    if (k != j) row_mask |= field[i][k];
+                    if (k != i) col_mask |= field[k][j];
+                }
+
+                field_t row_unique = field[i][j] & (~row_mask);
+                if (is_fixed(row_unique)) {
+                    field[i][j] = row_unique;
+                    impose(field, i, j, true);
+                    imposed_any = true;
+                    continue;
+                }
+
+                field_t col_unique = field[i][j] & (~col_mask);
+                if (is_fixed(col_unique)) {
+                    field[i][j] = col_unique;
+                    impose(field, i, j, true);
+                    imposed_any = true;
+                    continue;
+                }
+
+                // check my corner!
+                int origin1 = (i/3)*3;
+                int origin2 = (j/3)*3;
+                for (k=origin1; k<origin1+3; ++k) {
+                    for (l=origin2; l<origin2+3; ++l) {
+                        if (k != i || l != j) {
+                            corner_mask |= field[k][l];
+                        }
+                    }
+                }
+
+                field_t corner_unique = field[i][j] & (~corner_mask);
+                if (is_fixed(corner_unique)) {
+                    field[i][j] = corner_unique;
+                    impose(field, i, j, true);
+                    imposed_any = true;
+                    continue;
+                }
+            }
+        }
+    } while(imposed_any);
 }
 
 int check_solution(sudoku_t field)
@@ -107,6 +164,8 @@ int _solve_more(sudoku_t s, bool check_unique,
     sudoku_t buffer, a_solution;
 
     for(;;) {
+
+        iterate_elimination(s);
 
         switch (check_solution(s)) {
             case SUDOKU_DONE:
