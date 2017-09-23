@@ -1,4 +1,4 @@
-CFLAGS = -Wall -std=c99 -pedantic -g -O1
+override CFLAGS := -W -Wall -std=c99 -pedantic -O1 -g $(CFLAGS)
 
 DEPS = sudoku.h solver.h
 

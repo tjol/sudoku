@@ -7,7 +7,6 @@ static inline void remove_option(field_t number, field_t *place)
     *place &= ~number;
 }
 
-static void impose(sudoku_t field, int i, int j, bool recurse);
 static inline void impose(sudoku_t field, int i, int j, bool recurse)
 {
     int k, l;
@@ -197,7 +196,7 @@ static int _solve_more(sudoku_t s, bool check_unique,
 
         // Guess something!
         // What shall we guess?
-        int simplest_i, simplest_j;
+        int simplest_i = 0, simplest_j = 0;
         int simplest_n_bits = 10;
 
         for (int i=0; i<9; ++i) {
@@ -252,7 +251,9 @@ static int _solve_more(sudoku_t s, bool check_unique,
             }
         }
 
-        if (my_solutions_count == 0) _dbg("Dead end.\n");
+        if (my_solutions_count == 0) {
+            _dbg("Dead end.\n");
+        }
 
         memcpy(s, a_solution, sizeof(sudoku_t));
 
