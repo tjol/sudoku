@@ -89,26 +89,30 @@ int _solve(sudoku_t s, bool check_unique,
         _dbg("\nIterating!\n");
         iterate_sudoku(buffer);
 
-        switch (check_solution(buffer)) {
-            case SUDOKU_DONE:
-                _dbg("DONE\n");
-                if (collect != NULL)
-                    (*collect)(collect_arg, s);
-                memcpy(s, buffer, sizeof(sudoku_t));
-                return 1;
-            case SUDOKU_ERROR:
-                _dbg("ERROR\n");
-                return 0;
-            default:
-                _dbg("CONTINUE\n");
-        }
-
         if (sudoku_cmp(s, buffer) != 0) {
             _dbg("Progress was made.\n");
             _dbg_print_sudoku(buffer);
             memcpy(s, buffer, sizeof(sudoku_t));
 
         } else {
+            // The last iteration was stable.
+
+            switch (check_solution(buffer)) {
+                case SUDOKU_DONE:
+                    _dbg("DONE\n");
+                    if (collect != NULL)
+                        (*collect)(collect_arg, buffer);
+                    memcpy(s, buffer, sizeof(sudoku_t));
+                    return 1;
+                case SUDOKU_ERROR:
+                    _dbg("ERROR\n");
+                    return 0;
+                default:
+                    _dbg("CONTINUE\n");
+            }
+
+            // ... but it didn't yield a final result.
+
             // Guess something!
             // What shall we guess?
             field_t *simplest = NULL;
@@ -136,10 +140,8 @@ int _solve(sudoku_t s, bool check_unique,
 
             int my_solutions_count = 0;
 
-            int which = 0;
             for (int i=0; i<9; ++i) {
                 if (((*simplest) >> i) & 1) {
-                    ++which;
                     *simplest_buf = (1 << i);
 
                     _dbg("HAVE \n");

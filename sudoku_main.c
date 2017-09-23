@@ -91,6 +91,35 @@ int main(int argc, char **argv)
     }
 }
 
+struct solutions_list;
+struct solutions_list {
+    sudoku_t field;
+    struct solutions_list *next;
+};
+
+struct solutions_list *new_solutions_list()
+{
+    struct solutions_list *lst = malloc(sizeof(struct solutions_list));
+    lst->next = NULL;
+    return lst;
+}
+
+void save_solution(struct solutions_list *lst, sudoku_t s)
+{
+    while (lst->next)
+        lst = lst->next;
+
+    memcpy(lst->field, s, sizeof(sudoku_t));
+    lst->next = new_solutions_list();
+}
+
+void free_solutions_list(struct solutions_list *lst)
+{
+    if (lst->next)
+        free_solutions_list(lst->next);
+    free(lst);
+}
+
 #define TIMEIT(VAR, STMT) \
     { \
         struct timeval _TIMEIT_t0, _TIMEIT_t1; \
@@ -115,15 +144,29 @@ void process_sudoku_file(FILE *fp)
             puts("");
         }
 
-        if (count_solutions) {
+        if (count_solutions || all_solutions) {
             int solution_count = 0;
+            struct solutions_list *solutions;
 
-            if (timeit_iters == 0)
-                solution_count = count_sudoku_solutions(s);
-            else {
+            if (timeit_iters == 0) {
+                if (all_solutions) {
+                    solutions = new_solutions_list();
+                    solution_count = collect_all_solutions(s,
+                        (solution_collector)save_solution, solutions);
+                } else {
+                    solution_count = count_sudoku_solutions(s);
+                }
+            } else {
                 memcpy(buffer, s, sizeof(sudoku_t));
                 TIMEIT(dt_ms, memcpy(s, buffer, sizeof(sudoku_t));
-                              solution_count = count_sudoku_solutions(s))
+                              if (all_solutions) {
+                                  free_solutions_list(solutions);
+                                  solutions = new_solutions_list();
+                                  solution_count = collect_all_solutions(s, 
+                                    (solution_collector)save_solution, solutions);
+                              } else {
+                                  solution_count = count_sudoku_solutions(s);
+                              })
             }
 
             if (short_output) {
@@ -142,13 +185,24 @@ void process_sudoku_file(FILE *fp)
                         printf("\nThere is 1 solution.\n");
                     else
                         printf("\nThere are %d solutions.\n", solution_count);
-                    print_sudoku(s, false);
+                    
+                    if (all_solutions) {
+                        struct solutions_list *lst = solutions;
+                        while (lst->next) {
+                            print_sudoku(lst->field, false);
+                            puts("");
+                            lst = lst->next;
+                        }
+                    } else print_sudoku(s, false);
                 } else {
                     printf("\nThere are no solutions.\n");
                 }
 
                 if (timeit_iters)
                     printf("Running time %.2f s (%.2f ms per iteration)\n", dt_ms/1000.0, dt_ms/timeit_iters);
+
+                if (all_solutions)
+                    free_solutions_list(solutions);
             }
         } else {
             bool solved = false;
