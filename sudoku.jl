@@ -3,14 +3,45 @@
 using IterTools
 using ArgParse
 
-SudokuField() = IntSet([1,2,3,4,5,6,7,8,9])
-SudokuField(n) = (1 <= n <= 9) ? IntSet([n]) : error("invalid sudoku field")
+# SudokuField() = IntSet([1,2,3,4,5,6,7,8,9])
+# SudokuField(n) = (1 <= n <= 9) ? IntSet([n]) : error("invalid sudoku field")
+# field_is_fixed(f) = (possibilities(f) == 1)
+# remove_options(f, vals) = setdiff(f, vals)
+# impose_num!(sudoku, i, j, f::IntSet) = impose_num!(sudoku, i, j, collect(f)[1])
+# get_num(f) = collect(f)[1]
+# possibilities(f) = length(f)
+# get_possibilities(f) = f
+
+SudokuField() = 0x1ff
+SudokuField(n) = (1 <= n <= 9) ? (1 << (n-1)) : error("invalid sudoku field ", n)
+field_is_fixed(f) = (
+    f == 0 ? false : ((f & 1) == 1 ? f == 1 : field_is_fixed((f>>1))))
+remove_options(f, vals::UInt16) = f & ~vals
+
+function remove_options(f, vals::Array{T}) where {T<:Integer}
+    vals_bits::UInt16 = 0
+    for v in vals
+        vals_bits |= 1 << (v-1)
+    end
+    return remove_options(f, vals_bits)
+end
+
+function get_num(f)
+    for n in 1:9
+        if (f & (1<<(n-1))) == f
+            return n
+        end
+    end
+    return 0
+end
+
+possibilities(f) = (f == 0 ? 0 : possibilities(f>>1) + (f&1))
+
+get_possibilities(f) = [n for n in 1:9 if (f & (1<<(n-1))) != 0]
+
+impose_num!(sudoku, i, j, f::UInt16) = impose_num!(sudoku, i, j, get_num(f))
+
 Sudoku() = fill(SudokuField(), (9,9))
-
-field_is_fixed(f) = (length(f) == 1)
-
-
-impose_num!(sudoku, i, j, f::IntSet) = impose_num!(sudoku, i, j, collect(f)[1])
 
 row_of(i,j) = ((i,k) for k in 1:9)
 col_of(i,j) = ((k,j) for k in 1:9)
@@ -27,7 +58,7 @@ function impose_num!(sudoku, i, j, n::Integer)
             continue
         end
         was_fixed = field_is_fixed(sudoku[k,l])
-        sudoku[k,l] = setdiff(sudoku[k,l], [n])
+        sudoku[k,l] = remove_options(sudoku[k,l], [n])
         if !was_fixed && field_is_fixed(sudoku[k,l])
             push!(newly_fixed, (k,l))
         end
@@ -45,7 +76,7 @@ function eliminate_in_region!(sudoku, indexpairs)
     imposed = 0
 
     for (i,j) in indexpairs
-        f = copy(sudoku[i,j])
+        f = sudoku[i,j]
 
         if field_is_fixed(f)
             continue
@@ -55,10 +86,10 @@ function eliminate_in_region!(sudoku, indexpairs)
             if k == i && l == j
                 continue
             end
-            setdiff!(f, sudoku[k,l])
+            f = remove_options(f, sudoku[k,l])
         end
 
-        if length(f) == 1
+        if possibilities(f) == 1
             impose_num!(sudoku, i, j, f)
             imposed += 1
         end
@@ -101,11 +132,11 @@ function solve!(sudoku, find_all_solutions=true, callback=nothing)
         for j in 1:9
             for i in 1:9
                 f = sudoku[i,j]
-                if 1 < length(f) < lowest_order
-                    lowest_order = length(f)
+                if 1 < possibilities(f) < lowest_order
+                    lowest_order = possibilities(f)
                     lowest_i = i
                     lowest_j = j
-                    if length(f) == 2
+                    if possibilities(f) == 2
                         break
                     end
                 end
@@ -116,7 +147,7 @@ function solve!(sudoku, find_all_solutions=true, callback=nothing)
         solution = nothing
         solutions_count = 0
 
-        for n in options
+        for n in get_possibilities(options)
             trial_sudoku = copy(sudoku)
             impose_num!(trial_sudoku, lowest_i, lowest_j, n)
             solutions_here = solve!(trial_sudoku, find_all_solutions, callback)
@@ -142,7 +173,7 @@ end
 function check_solution(sudoku)
     any_not_fixed = false
     for f in sudoku
-        if length(f) == 0
+        if possibilities(f) == 0
             return SUDOKU_ERROR
         elseif !field_is_fixed(f)
             any_not_fixed = true;
@@ -201,7 +232,7 @@ function print_sudoku(s, short=false)
     for i in 1:9
         for j in 1:9
             f = s[i,j]
-            print(field_is_fixed(f) ? collect(f)[1] : '.')
+            print(field_is_fixed(f) ? get_num(f) : '.')
             if !short
                 print(j == 9 ? '\n' : ' ')
             end
