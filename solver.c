@@ -175,89 +175,86 @@ static int _solve_more(sudoku_t s, bool check_unique,
 {
     sudoku_t buffer, a_solution;
 
-    for(;;) {
+    iterate_elimination(s);
 
-        iterate_elimination(s);
+    switch (check_solution(s)) {
+        case SUDOKU_DONE:
+            _dbg("DONE\n");
+            if (collect != NULL)
+                (*collect)(collect_arg, s);
+            return 1;
+        case SUDOKU_ERROR:
+            _dbg("ERROR\n");
+            return 0;
+        default:
+            _dbg("CONTINUE\n");
+    }
 
-        switch (check_solution(s)) {
-            case SUDOKU_DONE:
-                _dbg("DONE\n");
-                if (collect != NULL)
-                    (*collect)(collect_arg, s);
-                return 1;
-            case SUDOKU_ERROR:
-                _dbg("ERROR\n");
-                return 0;
-            default:
-                _dbg("CONTINUE\n");
-        }
+    memcpy(buffer, s, sizeof(sudoku_t));
 
-        memcpy(buffer, s, sizeof(sudoku_t));
+    // Guess something!
+    // What shall we guess?
+    int simplest_i = 0, simplest_j = 0;
+    int simplest_n_bits = 10;
 
-        // Guess something!
-        // What shall we guess?
-        int simplest_i = 0, simplest_j = 0;
-        int simplest_n_bits = 10;
-
-        for (int i=0; i<9; ++i) {
-            for (int j=0; j<9; ++j) {
-                int count = count_bits(buffer[i][j]);
-                if (count < simplest_n_bits && count > 1) {
-                    simplest_n_bits = count;
-                    simplest_i = i;
-                    simplest_j = j;
-                }
+    for (int i=0; i<9; ++i) {
+        for (int j=0; j<9; ++j) {
+            int count = count_bits(buffer[i][j]);
+            if (count < simplest_n_bits && count > 1) {
+                simplest_n_bits = count;
+                simplest_i = i;
+                simplest_j = j;
             }
         }
+    }
 
-        if (simplest_n_bits == 10) {
-            return 0;
-        }
+    if (simplest_n_bits == 10) {
+        return 0;
+    }
 
-        // We've selected the earliest point with the lowest number
-        // of possibilities. Try all.
+    // We've selected the earliest point with the lowest number
+    // of possibilities. Try all.
 
-        int my_solutions_count = 0;
+    int my_solutions_count = 0;
 
-        for (int i=0; i<9; ++i) {
-            if ((s[simplest_i][simplest_j] >> i) & 1) {
-                buffer[simplest_i][simplest_j] = (1 << i);
-                impose(buffer, simplest_i, simplest_j, true)
+    for (int i=0; i<9; ++i) {
+        if ((s[simplest_i][simplest_j] >> i) & 1) {
+            buffer[simplest_i][simplest_j] = (1 << i);
+            impose(buffer, simplest_i, simplest_j, true)
 
-                _dbg("HAVE \n");
-                _dbg_print_sudoku(s);
-                _dbg("GUESS \n");
-                _dbg_print_sudoku(buffer);
-                // The buffer now contains our guess
-                int solutions_here = _solve_more(buffer, check_unique,
-                                                 collect, collect_arg);
-                if (solutions_here > 0) {
-                    // done!
-                    
-                    if (!check_unique) {
-                        memcpy(s, buffer, sizeof(sudoku_t));
-                        return 1;
-                    } else {
-                        my_solutions_count += solutions_here;
-                        memcpy(a_solution, buffer, sizeof(sudoku_t));
-                        // backtrack to find more solutions!
-                        memcpy(buffer, s, sizeof(sudoku_t));
-                    }
+            _dbg("HAVE \n");
+            _dbg_print_sudoku(s);
+            _dbg("GUESS \n");
+            _dbg_print_sudoku(buffer);
+            // The buffer now contains our guess
+            int solutions_here = _solve_more(buffer, check_unique,
+                                             collect, collect_arg);
+            if (solutions_here > 0) {
+                // done!
+                
+                if (!check_unique) {
+                    memcpy(s, buffer, sizeof(sudoku_t));
+                    return 1;
                 } else {
-                    // backtrack!
+                    my_solutions_count += solutions_here;
+                    memcpy(a_solution, buffer, sizeof(sudoku_t));
+                    // backtrack to find more solutions!
                     memcpy(buffer, s, sizeof(sudoku_t));
                 }
-                _dbg("... next guess\n");
+            } else {
+                // backtrack!
+                memcpy(buffer, s, sizeof(sudoku_t));
             }
+            _dbg("... next guess\n");
         }
-
-        if (my_solutions_count == 0) {
-            _dbg("Dead end.\n");
-        }
-
-        memcpy(s, a_solution, sizeof(sudoku_t));
-
-        return my_solutions_count;
     }
+
+    if (my_solutions_count == 0) {
+        _dbg("Dead end.\n");
+    }
+
+    memcpy(s, a_solution, sizeof(sudoku_t));
+
+    return my_solutions_count;
 }
 

@@ -14,6 +14,6 @@ gen-sudoku: sudoku.o solver.o generator.o generate_main.o
 	gcc -c -o $@ $< $(CFLAGS)
 
 clean:
-	rm -vf *.o sudoku
+	rm -vf *.o sudoku gen-sudoku
 
 .PHONY: clean all 

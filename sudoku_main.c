@@ -39,7 +39,7 @@ int main(int argc, char **argv)
                     "        Display this help message\n"
                     "    --count-solutions -c\n"
                     "        Count how many solutions there are (default)\n"
-                    "    --count-solutions -C\n"
+                    "    --do-not-count -C\n"
                     "        Do not count how many solutions there are\n"
                     "    --all -a\n"
                     "        Find all solutions to the puzzles (overrides -c, -C)\n"
