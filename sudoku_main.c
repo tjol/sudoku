@@ -46,7 +46,7 @@ int main(int argc, char **argv)
                     "    --short-output -s\n"
                     "        Use a shorter output format.\n"
                     "    --timeit=iterations\n"
-                    "        Use a shorter output format.\n",
+                    "        Time the solver.\n",
                     argv[0]);
                 return 0;
             case 'c':

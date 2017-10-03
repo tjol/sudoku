@@ -7,7 +7,7 @@ static inline void remove_option(field_t number, field_t *place)
     *place &= ~number;
 }
 
-static inline void impose(sudoku_t field, int i, int j, bool recurse)
+inline void impose(sudoku_t field, int i, int j, bool recurse)
 {
     int k, l;
     int ii_now_fixed[81];

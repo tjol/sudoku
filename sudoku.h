@@ -18,10 +18,6 @@
 #   define _dbg_print_sudoku(s)
 #endif
 
-#define SUDOKU_DONE 1
-#define SUDOKU_IN_PROGRESS 0
-#define SUDOKU_ERROR -1
-
 typedef uint16_t field_t;
 typedef field_t sudoku_t[9][9];
 
