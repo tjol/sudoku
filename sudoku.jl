@@ -271,8 +271,7 @@ function main()
 
     args = parse_args(s)
 
-    my_print_sudoku(s) = (print_sudoku(s, args["short-output"]);
-                          args["short-output"] ? nothing : print("\n"))
+    my_print_sudoku(s) = print_sudoku(s, args["short-output"])
 
     sudoku_files = args["sudoku_file"]
     if length(sudoku_files) == 0
@@ -292,6 +291,13 @@ function main()
                 exit(0)
             end
 
+            s = Sudoku(sudoku_nums)
+            if !args["short-output"]
+                println("Sudoku:")
+                my_print_sudoku(s)
+                print("\n\n")
+            end
+
             if args["timeit"] > 0
                 t1 = time() 
                 n = 0
@@ -301,8 +307,9 @@ function main()
                 end
                 t2 = time()
                 dt_ms = (t2 - t1)*1000
-                my_print_sudoku(s)
+                
                 if args["short-output"]
+                    my_print_sudoku(s)
                     if args["count-solutions"]
                         @printf " %d" n
                     end
@@ -317,23 +324,20 @@ function main()
                             print("There are no solutions.\n")
                         end
                     end
+                    my_print_sudoku(s)
                     @printf "Running time %.2f s (%.2f ms per iteration)\n" dt_ms dt_ms/args["timeit"]
                 end
             else
-                s = Sudoku(sudoku_nums)
                 n = 0
                 if args["all"]
                     n = solve!(s, true, args["short-output"] ? nothing : my_print_sudoku)
-                    if args["short-output"]
-                        my_print_sudoku(s)
-                    end
                 else
                     n = solve!(s, args["count-solutions"])
-                    my_print_sudoku(s)
                 end
 
                 if args["short-output"]
                     if args["count-solutions"]
+                        my_print_sudoku(s)
                         @printf " %d\n" n
                     end
                 else
@@ -345,6 +349,9 @@ function main()
                         else
                             print("There are no solutions.\n")
                         end
+                    end
+                    if !args["all"]
+                        my_print_sudoku(s)
                     end
                 end
             end

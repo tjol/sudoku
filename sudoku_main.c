@@ -139,7 +139,7 @@ void process_sudoku_file(FILE *fp)
 
     while (fill_sudoku_from_file(s, fp) > 0) {
         if (!short_output) {
-            puts("Sudoku: ");
+            puts("Sudoku:");
             print_sudoku(s, false);
             puts("");
         }

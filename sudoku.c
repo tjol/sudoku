@@ -31,17 +31,15 @@ void print_sudoku(sudoku_t field, bool short_format)
 {
     int i, j;
 
-    const char *spacer = short_format ? "" : " ";
-
     for (i=0; i<9; ++i) {
         for (j=0; j<9; ++j) {
             int n = bits2number(field[i][j]);
             switch(n) {
                 case -1:
-                    printf("E%s", spacer);
+                    putchar('E');
                     break;
                 case 0:
-                    printf(".%s", spacer);
+                    putchar('.');
                     break;
                 case 1: 
                 case 2: 
@@ -52,14 +50,16 @@ void print_sudoku(sudoku_t field, bool short_format)
                 case 7: 
                 case 8: 
                 case 9:
-                    printf("%d%s", n, spacer);
+                    printf("%d", n);
                     break;
                 default:
-                    printf("!%s", spacer);
+                    putchar('!');
                     break;
             }
+            if (!short_format && j != 8)
+                putchar(' ');
         }
-        if (!short_format) printf("\n");
+        if (!short_format) putchar('\n');
     }
 }
 
