@@ -18,6 +18,7 @@ static bool remove_random(sudoku_t s);
 void generate_sudoku(sudoku_t buffer)
 {
     int i, j;
+    sudoku_t solve_buffer;
 
     // generate an empty sudoku
     for (i=0; i<9; ++i)
@@ -32,9 +33,11 @@ void generate_sudoku(sudoku_t buffer)
 
             if (is_fixed(buffer[i][j])) continue;
             buffer[i][j] = random_allowed(buffer[i][j]);
+            impose(buffer, i, j, true);
 
+            memcpy(solve_buffer, buffer, sizeof(sudoku_t));
             // Is there a solution here?
-            if (!solve_sudoku(buffer)) {
+            if (!solve_sudoku(solve_buffer)) {
                 memcpy(buffer, prev, sizeof(sudoku_t));
                 if ((--j) < 0) {
                     --i;
