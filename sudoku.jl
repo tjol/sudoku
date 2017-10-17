@@ -295,7 +295,7 @@ function main()
             if !args["short-output"]
                 println("Sudoku:")
                 my_print_sudoku(s)
-                print("\n\n")
+                print("\n")
             end
 
             if args["timeit"] > 0
@@ -317,15 +317,15 @@ function main()
                 else
                     if args["count-solutions"]
                         if n > 1
-                            @printf "There are %d solutions.\n" n
+                            @printf "\nThere are %d solutions.\n" n
                         elseif n == 1
-                            print("There is 1 solution.\n")
+                            print("\nThere is 1 solution.\n")
                         else
-                            print("There are no solutions.\n")
+                            print("\nThere are no solutions.\n")
                         end
                     end
                     my_print_sudoku(s)
-                    @printf "Running time %.2f s (%.2f ms per iteration)\n" dt_ms dt_ms/args["timeit"]
+                    @printf "Running time %.2f s (%.2f ms per iteration)\n" dt_ms/1e3 dt_ms/args["timeit"]
                 end
             else
                 n = 0
@@ -339,6 +339,9 @@ function main()
                     if args["count-solutions"]
                         my_print_sudoku(s)
                         @printf " %d\n" n
+                    else
+                        my_print_sudoku(s)
+                        println("")
                     end
                 else
                     if args["count-solutions"]
