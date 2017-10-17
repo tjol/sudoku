@@ -1,0 +1,5 @@
+Sudoku solvers in C, Julia and Python.
+
+The Python code was shamelessly borrowed from Peter Norvig.
+
+Everything you need to know is in <Performance comparison.ipynb>

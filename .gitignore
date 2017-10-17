@@ -2,3 +2,6 @@
 /sudoku
 /gen-sudoku
 *~
+*.py[co]
+__pycache__
+.ipynb_checkpoints
